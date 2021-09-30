@@ -55,42 +55,39 @@ def build_message(args):
 
     if args.servicename:
         # service
-        message = """[{notificationtype}] {servicedisplayname} on {hostdisplayname} is {servicestate}!
-{output}
-When: {longdatetime}
-Ref: {hostname}!{servicename}
-Monitoring host: {monitoringhostname}\
-""".format(
+        message = """[{notificationtype}] {servicedisplayname} on {hostdisplayname} is {servicestate}!\n{output}""".format(
             notificationtype=args.notificationtype,
-            monitoringhostname=gethostname(),
             servicedisplayname=args.servicedisplayname,
             hostdisplayname=args.hostdisplayname,
             servicestate=args.state,
-            output=output,
-            longdatetime=args.longdatetime,
-            servicename=args.servicename,
-            hostname=args.hostname
+            output=output
+
         )
+        if not args.short:
+            message += """\nWhen: {longdatetime}\nRef: {hostname}!{servicename}\nMonitoring host: {monitoringhostname}""".format(
+                longdatetime=args.longdatetime,
+                hostname=args.hostname,
+                servicename=args.servicename,
+                monitoringhostname=gethostname()
+            )
     else:
-        message = """[{notificationtype}] {hostdisplayname} is {hoststate}!
-{output}
-When: {longdatetime}
-Ref: {hostname}
-Monitoring host: {monitoringhostname}\
-""".format(
+        message = """[{notificationtype}] {hostdisplayname} is {hoststate}!\n{output}""".format(
             notificationtype=args.notificationtype,
-            monitoringhostname=gethostname(),
             hostdisplayname=args.hostdisplayname,
             hoststate=args.state,
-            output=output,
+            output=output
+        )
+        if not args.short:
+            message += """\nWhen: {longdatetime}\nRef: {hostname}\nMonitoring host: {monitoringhostname}""".format(
             longdatetime=args.longdatetime,
-            hostname=args.hostname
+            hostname=args.hostname,
+            monitoringhostname=gethostname()
         )
 
-    if args.hostaddress:
+    if not args.short and args.hostaddress:
         message += "\nIPv4: {}".format(args.hostaddress)
 
-    if args.hostaddress6:
+    if not args.short and args.hostaddress6:
         message += "\nIPv6: {}".format(args.hostaddress6)
 
     if args.notificationcomment:
@@ -104,19 +101,20 @@ Comment by {notificationauthorname}
             comment=comment
         )
 
-    if args.icingaweb2url and args.servicename:
-        message += "\n" + args.icingaweb2url + \
-            "/monitoring/service/show?host={hostname}&service={servicename}" \
-            .format(
-                hostname=args.hostname,
-                servicename=args.servicename
-            )
-    elif args.icingaweb2url:
-        message += "\n" + args.icingaweb2url + \
-            "/monitoring/host/show?host={hostname}" \
-            .format(
-                hostname=args.hostname,
-            )
+    if not args.short:
+        if args.icingaweb2url and args.servicename:
+            message += "\n" + args.icingaweb2url + \
+                "/monitoring/service/show?host={hostname}&service={servicename}" \
+                .format(
+                    hostname=args.hostname,
+                    servicename=args.servicename
+                )
+        elif args.icingaweb2url:
+            message += "\n" + args.icingaweb2url + \
+                "/monitoring/host/show?host={hostname}" \
+                .format(
+                    hostname=args.hostname,
+                )
 
     return message
 
@@ -145,6 +143,7 @@ def build_argparser():
     parser.add_argument('-b', '--notificationauthorname')
     parser.add_argument('-c', '--notificationcomment')
     parser.add_argument('-i', '--icingaweb2url')
+    parser.add_argument('-S', '--short', default=False, action='store_true')
 
     parser.add_argument('-r', '--jid', required=True,
                         help="Target JID")
